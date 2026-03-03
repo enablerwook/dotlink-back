@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(supabase --version:*)",
+      "Bash(python3:*)",
+      "Bash(npx supabase:*)",
+      "Bash(ls:*)",
+      "Bash(claude mcp call supabase execute_sql:*)",
+      "Bash(ACCESS_TOKEN=\"sbp_oauth_efe2bf8f6f9771b56e4009cb9eba859074b3dc29\")",
+      "Bash(__NEW_LINE_d14f68a656d7393f__ python3 -c \":*)",
+      "Bash(__NEW_LINE_7ed351b3f26d5829__ python3 -c \":*)",
+      "Bash(npm run build)",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__list_tables",
+      "WebFetch(domain:docs.apify.com)",
+      "WebFetch(domain:apify.com)",
+      "WebFetch(domain:api.apify.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:blog.apify.com)",
+      "Bash(node -e \":*)",
+      "Bash(node _test_apify.mjs)",
+      "Bash(node _test_gemini.mjs)",
+      "mcp__supabase__list_projects",
+      "Bash(curl:*)",
+      "Bash(node:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}
