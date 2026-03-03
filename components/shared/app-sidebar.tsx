@@ -9,6 +9,8 @@ import {
   Lightbulb,
   Zap,
   LogOut,
+  CreditCard,
+  Settings,
 } from "lucide-react"
 import {
   Sidebar,
@@ -31,6 +33,8 @@ const navItems = [
   { title: "라이브러리", href: "/library", icon: FolderOpen },
   { title: "시냅스", href: "/synapse", icon: Zap },
   { title: "기능 요청", href: "/feature-request", icon: Lightbulb },
+  { title: "구독", href: "/subscribe", icon: CreditCard },
+  { title: "설정", href: "/settings", icon: Settings },
 ]
 
 export function AppSidebar() {
