@@ -19,7 +19,7 @@ export function FrameCarousel({ frames }: { frames: FrameData[] }) {
   const activeFrame = frames[current]
 
   return (
-    <div className="mx-auto flex w-[300px] flex-col gap-2">
+    <div className="mx-auto flex w-[360px] flex-col gap-2">
       {/* 메인 프레임 뷰어 — 세로형 9:12 비율, 300px 고정 너비 */}
       <div className="relative aspect-[9/12] overflow-hidden rounded-lg bg-muted">
         {activeFrame.imageUrl ? (
