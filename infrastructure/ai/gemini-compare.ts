@@ -20,24 +20,24 @@ const COMPARE_PROMPT = (cardA: ContentCard, cardB: ContentCard) => `
 당신은 숏폼 콘텐츠 전문 기획자입니다. 두 콘텐츠를 비교 분석하여 새로운 크리에이션 카드를 작성해주세요. 반드시 JSON 형식으로만 응답하세요.
 
 ## Card A: ${cardA.title} (${cardA.platform})
-- 3초 후킹 영상: ${cardA.analysis.hookVisual}
-- 3초 후킹 텍스트: ${cardA.analysis.hookText}
-- 스크립트 매력도: ${cardA.analysis.scriptAppeal}
-- 캡션 분석: ${cardA.analysis.captionAnalysis}
-- 영상미/연출: ${cardA.analysis.visualDirection}
-- 인게이지먼트 장치: ${cardA.analysis.engagementDevices}
-- 콘텐츠 유형: ${cardA.analysis.contentType}
-- 세일즈/소구점: ${cardA.analysis.salesPoints}
+- 3초 후킹 영상: ${cardA.analysis.hook_analysis}
+- 3초 후킹 텍스트: ${cardA.analysis.hook_text}
+- 전체 대본: ${cardA.analysis.full_script}
+- 캡션: ${cardA.analysis.caption}
+- 촬영/편집 스타일: ${cardA.analysis.production_note}
+- 인게이지먼트 분석: ${cardA.analysis.engagement.analysis}
+- 콘텐츠 유형: ${cardA.analysis.content_type}
+- 세일즈/소구점: ${cardA.analysis.selling_point}
 
 ## Card B: ${cardB.title} (${cardB.platform})
-- 3초 후킹 영상: ${cardB.analysis.hookVisual}
-- 3초 후킹 텍스트: ${cardB.analysis.hookText}
-- 스크립트 매력도: ${cardB.analysis.scriptAppeal}
-- 캡션 분석: ${cardB.analysis.captionAnalysis}
-- 영상미/연출: ${cardB.analysis.visualDirection}
-- 인게이지먼트 장치: ${cardB.analysis.engagementDevices}
-- 콘텐츠 유형: ${cardB.analysis.contentType}
-- 세일즈/소구점: ${cardB.analysis.salesPoints}
+- 3초 후킹 영상: ${cardB.analysis.hook_analysis}
+- 3초 후킹 텍스트: ${cardB.analysis.hook_text}
+- 전체 대본: ${cardB.analysis.full_script}
+- 캡션: ${cardB.analysis.caption}
+- 촬영/편집 스타일: ${cardB.analysis.production_note}
+- 인게이지먼트 분석: ${cardB.analysis.engagement.analysis}
+- 콘텐츠 유형: ${cardB.analysis.content_type}
+- 세일즈/소구점: ${cardB.analysis.selling_point}
 
 ## 작성 지침
 두 콘텐츠의 성공 요소를 융합하여 새로운 콘텐츠 아이디어를 구체적으로 제안하세요.

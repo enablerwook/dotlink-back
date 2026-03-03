@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/infrastructure/supabase/server"
 
-// PATCH /api/library/[id] — 메모, 즐겨찾기 수정
+// PATCH /api/library/[id] — 메모, 즐겨찾기, 분석 내용 수정
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -17,7 +17,7 @@ export async function PATCH(
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 })
   }
 
-  let body: { note?: string; isFavorite?: boolean }
+  let body: { note?: string; isFavorite?: boolean; analysis?: Record<string, unknown> }
   try {
     body = await request.json()
   } catch {
@@ -27,6 +27,7 @@ export async function PATCH(
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (body.note !== undefined) updates.note = body.note
   if (body.isFavorite !== undefined) updates.is_favorite = body.isFavorite
+  if (body.analysis !== undefined) updates.analysis = body.analysis
 
   const { error } = await supabase
     .from("library_cards")

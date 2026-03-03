@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, Zap } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { DifficultyMeter } from "@/components/analysis/difficulty-meter"
 import type { ContentCard } from "@/lib/types"
 
 const platformColors: Record<string, string> = {
@@ -11,6 +13,14 @@ const platformColors: Record<string, string> = {
   tiktok: "bg-cyan-500/20 text-cyan-400",
   youtube: "bg-red-500/20 text-red-400",
 }
+
+// 카드 뒷면에 표시할 분석 섹션 (string 필드만)
+const analysisSections: { key: string; label: string }[] = [
+  { key: "hook_analysis",   label: "3초 후킹 영상" },
+  { key: "content_type",    label: "콘텐츠 유형" },
+  { key: "production_note", label: "촬영/편집 스타일" },
+  { key: "selling_point",   label: "세일즈/소구점" },
+]
 
 export function ContentCardComponent({
   card,
@@ -22,14 +32,15 @@ export function ContentCardComponent({
   onSynapseClick: (card: ContentCard) => void
 }) {
   const [frameIndex, setFrameIndex] = useState(0)
+  const [isFlipped, setIsFlipped] = useState(false)
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-xl border border-border/50 bg-card transition-colors hover:border-border">
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border/50 bg-card transition-colors hover:border-border">
       {/* Frame carousel area - 9:12 aspect ratio */}
       <div
         className="relative cursor-pointer"
         style={{ aspectRatio: "9/12" }}
-        onClick={() => onSelect(card)}
+        onClick={() => setIsFlipped(true)}
       >
         {card.frames[frameIndex].imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -110,6 +121,61 @@ export function ContentCardComponent({
         >
           <Zap className="size-3.5" />
         </button>
+
+        {/* 글래스 오버레이 — 분석 요약 */}
+        <div
+          className={cn(
+            "absolute inset-0 flex flex-col transition-all duration-300",
+            "bg-background/85 backdrop-blur-xl",
+            isFlipped
+              ? "pointer-events-auto opacity-100"
+              : "pointer-events-none opacity-0",
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* 닫기 버튼 */}
+          <button
+            onClick={() => setIsFlipped(false)}
+            className="absolute top-2 right-2 z-10 rounded-full bg-foreground/10 p-1 transition-colors hover:bg-foreground/20"
+            aria-label="닫기"
+          >
+            <X className="size-3.5" />
+          </button>
+
+          <ScrollArea className="h-full">
+            <div className="flex flex-col gap-2.5 p-3 pt-8">
+              <h4 className="text-xs font-bold text-foreground">{card.title}</h4>
+
+              {analysisSections.map(({ key, label }) => {
+                const value = card.analysis[key as keyof typeof card.analysis]
+                const text = typeof value === "string" ? value : ""
+                if (!text) return null
+                return (
+                  <div key={key}>
+                    <p className="mb-0.5 text-xs font-semibold text-primary">{label}</p>
+                    <p className="text-xs leading-relaxed text-foreground/80 line-clamp-3">{text}</p>
+                  </div>
+                )
+              })}
+
+              <div>
+                <p className="mb-1 text-xs font-semibold text-primary">제작 난이도</p>
+                <DifficultyMeter difficulty={card.analysis.difficulty} />
+              </div>
+
+              {/* 상세 보기 버튼 */}
+              <button
+                onClick={() => {
+                  setIsFlipped(false)
+                  onSelect(card)
+                }}
+                className="mt-1 w-full rounded-md bg-primary/10 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                상세 보기 / 수정
+              </button>
+            </div>
+          </ScrollArea>
+        </div>
       </div>
 
       {/* Card info */}

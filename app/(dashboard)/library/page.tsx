@@ -6,11 +6,11 @@ import { ContentCardComponent } from "@/components/library/content-card"
 import { CardDetailModal } from "@/components/library/card-detail-modal"
 import { useAppContext } from "@/domains/synapse/app-context"
 import { useLibraryCards } from "@/domains/library/hooks/use-library-cards"
-import type { ContentCard } from "@/lib/types"
+import type { AnalysisResult, ContentCard } from "@/lib/types"
 
 export default function LibraryPage() {
   const { setSelectedCardA } = useAppContext()
-  const { cards, loading, error } = useLibraryCards()
+  const { cards, loading, error, updateAnalysis } = useLibraryCards()
   const [selectedCard, setSelectedCard] = useState<ContentCard | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const router = useRouter()
@@ -23,6 +23,12 @@ export default function LibraryPage() {
   function handleSynapseClick(card: ContentCard) {
     setSelectedCardA(card)
     router.push("/synapse")
+  }
+
+  async function handleUpdateAnalysis(id: string, analysis: AnalysisResult) {
+    await updateAnalysis(id, analysis)
+    // 모달에 표시 중인 카드 로컬 상태도 갱신
+    setSelectedCard((prev) => (prev?.id === id ? { ...prev, analysis } : prev))
   }
 
   return (
@@ -70,6 +76,7 @@ export default function LibraryPage() {
         card={selectedCard}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        onUpdate={handleUpdateAnalysis}
       />
     </div>
   )

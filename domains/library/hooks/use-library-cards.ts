@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { ContentCard } from "@/lib/types"
+import type { AnalysisResult, ContentCard } from "@/lib/types"
 
 export function useLibraryCards() {
   const [cards, setCards] = useState<ContentCard[]>([])
@@ -52,5 +52,19 @@ export function useLibraryCards() {
     return res.ok
   }
 
-  return { cards, loading, error, refetch: fetchCards, deleteCard, toggleFavorite }
+  async function updateAnalysis(id: string, analysis: AnalysisResult) {
+    const res = await fetch(`/api/library/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ analysis }),
+    })
+    if (res.ok) {
+      setCards((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, analysis } : c)),
+      )
+    }
+    return res.ok
+  }
+
+  return { cards, loading, error, refetch: fetchCards, deleteCard, toggleFavorite, updateAnalysis }
 }
