@@ -5,17 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { DifficultyMeter } from "@/components/analysis/difficulty-meter"
+import { ANALYSIS_CARD_SECTIONS } from "@/lib/analysis-tabs"
 import type { ContentCard } from "@/lib/types"
-
-const sections: { key: string; label: string }[] = [
-  { key: "hook_analysis",   label: "3초 후킹 영상" },
-  { key: "hook_text",       label: "3초 후킹 텍스트" },
-  { key: "full_script",     label: "전체 대본" },
-  { key: "caption",         label: "캡션 & 해시태그" },
-  { key: "production_note", label: "촬영/편집 스타일" },
-  { key: "content_type",    label: "콘텐츠 유형" },
-  { key: "selling_point",   label: "세일즈/소구점" },
-]
 
 export function CardStack({
   cards,
@@ -66,7 +57,7 @@ export function CardStack({
         <ScrollArea className="h-full">
           <div className="flex flex-col gap-4 p-4">
             <h3 className="text-sm font-semibold">{current.title}</h3>
-            {sections.map(({ key, label }) => {
+            {ANALYSIS_CARD_SECTIONS.map(({ key, label }) => {
               const value = current.analysis[key as keyof typeof current.analysis]
               const text = typeof value === "string" ? value : ""
               return (

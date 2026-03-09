@@ -1,23 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/infrastructure/supabase/server"
 import { compareWithGemini } from "@/infrastructure/ai/gemini-compare"
-import type { ContentCard } from "@/lib/types"
-import type { AnalysisResult } from "@/domains/analysis/types"
-
-function dbRowToContentCard(row: Record<string, unknown>): ContentCard {
-  const scores = (row.scores ?? {}) as AnalysisResult
-  return {
-    id: String(row.id ?? ""),
-    title: String(row.title ?? ""),
-    platform: row.platform as ContentCard["platform"],
-    url: String(row.url ?? ""),
-    thumbnailGradient: "",
-    dateAnalyzed: "",
-    frames: [],
-    analysis: scores,
-    tags: [],
-  }
-}
+import { toContentCard } from "@/infrastructure/supabase/library-card-mapper"
 
 // POST /api/synapse/compare — 두 카드 AI 비교 분석
 export async function POST(request: NextRequest) {
@@ -55,12 +39,13 @@ export async function POST(request: NextRequest) {
   // 두 카드 조회 (본인 카드만)
   const { data: rows, error } = await supabase
     .from("library_cards")
-    .select("id, title, platform, url, scores")
+    .select("*")
     .eq("user_id", user.id)
     .in("id", [body.cardAId, body.cardBId])
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[Synapse Compare] DB 오류:", error.message)
+    return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 })
   }
 
   if (!rows || rows.length < 2) {
@@ -81,14 +66,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const cardA = dbRowToContentCard(rowA as Record<string, unknown>)
-  const cardB = dbRowToContentCard(rowB as Record<string, unknown>)
+  const cardA = toContentCard(rowA as Record<string, unknown>)
+  const cardB = toContentCard(rowB as Record<string, unknown>)
 
   try {
     const result = await compareWithGemini(cardA, cardB)
     return NextResponse.json({ result })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI 분석에 실패했습니다."
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error("[Synapse Compare] AI 분석 실패:", err)
+    return NextResponse.json({ error: "AI 분석에 실패했습니다." }, { status: 500 })
   }
 }

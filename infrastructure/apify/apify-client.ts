@@ -6,14 +6,37 @@ export interface ApifyResult {
   thumbnailUrl?: string
   videoUrl?: string      // 영상 다운로드 URL (프레임 추출용)
   transcript?: string    // 자막 (있는 경우)
-  duration?: number      // 영상 길이 (초)
   viewCount?: number
   likeCount?: number
   commentCount?: number  // 댓글 수 (engagement.metrics용)
+  postedAt?: string      // Instagram 게시 날짜 (ISO 8601, Apify timestamp)
 }
 
 // 인스타그램 릴스 전용 Actor ID (apify 공식, ~ 구분자 필수)
 const INSTAGRAM_ACTOR_ID = "apify~instagram-reel-scraper"
+
+// M15: 네트워크 에러 및 5xx 응답에 대해 자동 재시도
+async function fetchWithRetry(
+  url: string,
+  options?: RequestInit,
+  maxRetries = 2,
+): Promise<Response> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, options)
+      if (res.status >= 500 && attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 2000 * (attempt + 1)))
+        continue
+      }
+      return res
+    } catch (err) {
+      if (attempt === maxRetries) throw err
+      console.warn(`[Apify] 네트워크 에러, ${attempt + 1}회 재시도:`, err)
+      await new Promise((resolve) => setTimeout(resolve, 2000 * (attempt + 1)))
+    }
+  }
+  throw new Error("Apify 요청 재시도 횟수 초과")
+}
 
 export async function crawlContent(
   url: string,
@@ -38,7 +61,7 @@ export async function crawlContent(
 
   // Apify Actor 실행 (waitForFinish=120 → 최대 2분 대기)
   // instagram-reel-scraper의 입력 필드는 "username" (배열) — 릴스 URL도 허용
-  const runRes = await fetch(
+  const runRes = await fetchWithRetry(
     `https://api.apify.com/v2/acts/${INSTAGRAM_ACTOR_ID}/runs?token=${token}&waitForFinish=120`,
     {
       method: "POST",
@@ -63,7 +86,7 @@ export async function crawlContent(
   }
 
   // 결과 조회
-  const itemsRes = await fetch(
+  const itemsRes = await fetchWithRetry(
     `https://api.apify.com/v2/datasets/${datasetId}/items?token=${token}&limit=1`,
   )
 
@@ -104,10 +127,15 @@ function mapInstagramResult(item: Record<string, unknown>): ApifyResult {
     videoUrl: str(item.videoUrl) || undefined,
     // transcript는 선택적 — 비어있으면 undefined
     transcript: str(item.transcript) || undefined,
-    duration: num(item.videoDuration),
     // videoPlayCount가 더 정확한 수치, videoViewCount는 fallback
     viewCount: num(item.videoPlayCount ?? item.videoViewCount),
     likeCount: num(item.likesCount),
     commentCount: num(item.commentsCount),
+    // timestamp: Instagram 게시 날짜 (ISO 8601 or Unix timestamp)
+    postedAt: typeof item.timestamp === "string"
+      ? item.timestamp
+      : typeof item.timestamp === "number"
+        ? new Date(item.timestamp * 1000).toISOString()
+        : undefined,
   }
 }

@@ -130,6 +130,64 @@ AI 분석 파이프라인   → .agents/analysis-agent.md 참조
 
 ---
 
+## 7-1. 핵심 엔지니어링 원칙 (모든 코드에 적용)
+
+**이 원칙들은 모든 구현 작업에 반드시 적용됩니다.**
+
+### SRP — 단일 책임 원칙
+- 함수/파일 하나는 딱 하나의 책임만 가집니다
+- 함수명에 `And`가 들어간다면 분리 신호입니다
+- Route Handler는 인증·검증·서비스 호출만 담당합니다. 비즈니스 로직은 `domains/`로
+
+### Explicit over Implicit — 명시 > 암묵
+- 절대 조용히 실패하지 않습니다. `return {}` 대신 `throw new DomainError()`
+- 빈 객체·빈 배열로 에러를 숨기는 fallback 금지
+- 함수의 반환 타입을 항상 명시합니다
+
+### Fail Fast — 빨리 실패하기
+- 함수 초반 Guard Clause로 유효하지 않은 상태를 즉시 차단합니다
+- 중첩 if 대신 early return을 사용합니다
+```typescript
+// ❌ 중첩
+if (user) { if (plan) { ... } }
+
+// ✅ Early Return
+if (!user) throw new UnauthorizedError()
+if (!plan) throw new PlanNotFoundError()
+```
+
+### Named Errors — 명명된 에러 클래스
+- `Error("뭔가 잘못됨")` 대신 도메인 에러 클래스를 사용합니다
+- 에러 클래스는 `domains/{context}/errors.ts`에 정의합니다
+```typescript
+// ✅ 에러 타입으로 의도를 드러냄
+throw new UsageLimitExceededError(userId, currentUsage, limit)
+throw new InvalidPlatformUrlError(url)
+```
+
+### Push Logic Down — 로직은 도메인으로
+```
+app/api/**/route.ts  →  인증 확인, 입력 파싱, 서비스 호출, 응답 변환만
+domains/**/*-service.ts  →  비즈니스 로직 전체
+infrastructure/**  →  외부 서비스 호출만
+```
+
+### Pure Functions — 순수 함수 우선
+- 같은 입력 → 항상 같은 출력이 되도록 작성합니다
+- DB 조회·외부 API 호출은 서비스 레이어에만 위치합니다
+- 순수 변환 함수(mapping, parsing)는 사이드 이펙트 없이 작성합니다
+
+### DDD Ubiquitous Language — 도메인 용어 일관성
+- 비즈니스 용어를 코드에 그대로 사용합니다
+- 도메인 용어 → 파일명/함수명/변수명 직결
+```
+"분석"       → analyzeContent()  (❌ processVideo, ❌ handleRequest)
+"라이브러리 카드" → LibraryCard  (❌ Card, ❌ Item, ❌ Entry)
+"시냅스"      → SynapseComparison (❌ Comparison, ❌ Result)
+```
+
+---
+
 ## 8. 현재 구현 상태
 
 | 기능 | 상태 |

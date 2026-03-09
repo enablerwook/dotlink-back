@@ -2,9 +2,10 @@ export type Platform = "instagram" | "tiktok" | "youtube"
 
 export interface FrameData {
   id: number
-  imageUrl?: string    // Supabase Storage 업로드 URL (실제 프레임)
-  timestamp?: number   // 영상 내 타임스탬프 (초)
-  gradient: string     // 실제 이미지 없을 때 fallback 그라디언트
+  imageUrl?: string      // 서명된 URL (브라우저 표시용, 24시간 유효)
+  storagePath?: string   // Storage 경로 ({userId}/{analysisId}/frame-{n}.jpg) — 서명 URL 갱신 시 사용
+  timestamp?: number     // 영상 내 타임스탬프 (초)
+  gradient: string       // 실제 이미지 없을 때 fallback 그라디언트
   label: string
 }
 
@@ -25,16 +26,19 @@ export interface EngagementData {
   analysis: string
 }
 
+/**
+ * 분석 결과 도메인 타입
+ * UI 탭 순서: 유형 | 후킹 | 스크립트 | 캡션 | 연출 | 인게이지먼트 | 세일즈 | 제작 난이도
+ */
 export interface AnalysisResult {
-  hook_analysis: string       // 3초 후킹 영상 분석 (Gemini)
-  hook_text: string           // 첫 5초 발화 텍스트 (Whisper STT, 없으면 "")
-  full_script: string         // 전체 대본 (Whisper STT, 없으면 "")
-  caption: string             // 원본 캡션 & 해시태그 (Apify)
-  production_note: string     // 시청 지속시간 유지 요인 분석 (Gemini)
-  engagement: EngagementData  // 지표(Apify) + 분석(Gemini)
-  content_type: string        // 콘텐츠 유형 분류 (Gemini)
-  selling_point: string       // 판매/설득 포인트 분석 (Gemini)
-  difficulty: DifficultyRating // 제작 난이도 (Gemini)
+  content_type:  string          // 유형       — Gemini System2
+  hooking:       string          // 후킹       — Gemini System2 (첫 5초/150프레임 분석)
+  script:        string          // 스크립트   — Gemini System2 (전체 대본)
+  caption:       string          // 캡션       — Apify 원본
+  production:    string          // 연출       — Gemini System2
+  engagement:    EngagementData  // 인게이지먼트 — Apify 지표 + Gemini 분석 텍스트
+  selling_point: string          // 세일즈     — Gemini System2
+  difficulty:    DifficultyRating // 제작 난이도 — Gemini System2
 }
 
 export interface ContentCard {
@@ -43,10 +47,10 @@ export interface ContentCard {
   platform: Platform
   url: string
   thumbnailGradient: string
-  dateAnalyzed: string
+  postedAt?: string      // Instagram 게시 날짜 (Apify timestamp)
+  dateAnalyzed: string   // 분석 생성 날짜 (created_at fallback)
   frames: FrameData[]
   analysis: AnalysisResult
-  tags: string[]
 }
 
 export interface FeatureRequest {

@@ -30,7 +30,7 @@
 ## Google OAuth 체크리스트
 
 - Supabase Dashboard → Authentication → Providers → Google 활성화 확인
-- Google Cloud Console Redirect URI: `https://dahuhzldlvdnrqfxbqcp.supabase.co/auth/v1/callback`
+- Google Cloud Console Redirect URI: `https://[YOUR_PROJECT_REF].supabase.co/auth/v1/callback`
 
 ## 현재 구현 상태
 

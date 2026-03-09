@@ -1,7 +1,7 @@
 # DB 스키마 전체 정의
 
 _최종 업데이트: 2026-03-01_
-_Supabase 프로젝트: dahuhzldlvdnrqfxbqcp.supabase.co_
+_Supabase 프로젝트: [YOUR_PROJECT_REF].supabase.co_
 
 ---
 

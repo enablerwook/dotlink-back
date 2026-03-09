@@ -4,7 +4,7 @@
 
 Supabase PostgreSQL 사용. 모든 테이블은 RLS(Row Level Security) 활성화 필수.
 
-**프로젝트**: `dahuhzldlvdnrqfxbqcp.supabase.co`
+**프로젝트**: `[YOUR_PROJECT_REF].supabase.co`
 
 ---
 
@@ -121,7 +121,7 @@ DNA 분석 점수는 `JSONB`로 저장하여 스키마 변경 없이 확장 가�
 ## 환경 변수
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://dahuhzldlvdnrqfxbqcp.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://[YOUR_PROJECT_REF].supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...          # 클라이언트용 (공개 가능)
 SUPABASE_SERVICE_ROLE_KEY=eyJ...              # 서버 전용 (절대 공개 금지)
 ```

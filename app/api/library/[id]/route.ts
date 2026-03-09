@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/infrastructure/supabase/server"
+import type { AnalysisResult } from "@/lib/types"
 
-// PATCH /api/library/[id] — 메모, 즐겨찾기, 분석 내용 수정
+// PATCH /api/library/[id] — 분석 내용 수정
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -17,7 +18,7 @@ export async function PATCH(
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 })
   }
 
-  let body: { note?: string; isFavorite?: boolean; analysis?: Record<string, unknown> }
+  let body: { analysis?: AnalysisResult }
   try {
     body = await request.json()
   } catch {
@@ -25,9 +26,17 @@ export async function PATCH(
   }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
-  if (body.note !== undefined) updates.note = body.note
-  if (body.isFavorite !== undefined) updates.is_favorite = body.isFavorite
-  if (body.analysis !== undefined) updates.analysis = body.analysis
+
+  if (body.analysis !== undefined) {
+    updates.content_type        = body.analysis.content_type
+    updates.hooking             = body.analysis.hooking
+    updates.script              = body.analysis.script
+    updates.caption             = body.analysis.caption
+    updates.production          = body.analysis.production
+    updates.selling_point       = body.analysis.selling_point
+    updates.difficulty          = body.analysis.difficulty
+    updates.engagement_analysis = body.analysis.engagement.analysis
+  }
 
   const { error } = await supabase
     .from("library_cards")
@@ -36,7 +45,8 @@ export async function PATCH(
     .eq("user_id", user.id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[Library PATCH] DB 오류:", error.message)
+    return NextResponse.json({ error: "수정에 실패했습니다." }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })
@@ -65,7 +75,8 @@ export async function DELETE(
     .eq("user_id", user.id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[Library DELETE] DB 오류:", error.message)
+    return NextResponse.json({ error: "삭제에 실패했습니다." }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

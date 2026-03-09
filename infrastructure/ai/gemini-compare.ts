@@ -20,21 +20,19 @@ const COMPARE_PROMPT = (cardA: ContentCard, cardB: ContentCard) => `
 당신은 숏폼 콘텐츠 전문 기획자입니다. 두 콘텐츠를 비교 분석하여 새로운 크리에이션 카드를 작성해주세요. 반드시 JSON 형식으로만 응답하세요.
 
 ## Card A: ${cardA.title} (${cardA.platform})
-- 3초 후킹 영상: ${cardA.analysis.hook_analysis}
-- 3초 후킹 텍스트: ${cardA.analysis.hook_text}
-- 전체 대본: ${cardA.analysis.full_script}
+- 후킹 분석 (첫 5초): ${cardA.analysis.hooking}
+- 전체 대본: ${cardA.analysis.script}
 - 캡션: ${cardA.analysis.caption}
-- 촬영/편집 스타일: ${cardA.analysis.production_note}
+- 촬영/편집 스타일: ${cardA.analysis.production}
 - 인게이지먼트 분석: ${cardA.analysis.engagement.analysis}
 - 콘텐츠 유형: ${cardA.analysis.content_type}
 - 세일즈/소구점: ${cardA.analysis.selling_point}
 
 ## Card B: ${cardB.title} (${cardB.platform})
-- 3초 후킹 영상: ${cardB.analysis.hook_analysis}
-- 3초 후킹 텍스트: ${cardB.analysis.hook_text}
-- 전체 대본: ${cardB.analysis.full_script}
+- 후킹 분석 (첫 5초): ${cardB.analysis.hooking}
+- 전체 대본: ${cardB.analysis.script}
 - 캡션: ${cardB.analysis.caption}
-- 촬영/편집 스타일: ${cardB.analysis.production_note}
+- 촬영/편집 스타일: ${cardB.analysis.production}
 - 인게이지먼트 분석: ${cardB.analysis.engagement.analysis}
 - 콘텐츠 유형: ${cardB.analysis.content_type}
 - 세일즈/소구점: ${cardB.analysis.selling_point}

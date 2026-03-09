@@ -12,21 +12,16 @@ export interface ContentCard {
   dateAnalyzed: string
   frames: FrameData[]
   analysis: AnalysisResult
-  tags: string[]
 }
 
 export interface LibraryCard {
   id: string
   userId: string
-  analysisId: string
+  analysisId: string | null
   title: string
   platform: Platform
-  thumbnail?: string
+  thumbnailUrl?: string
   url: string
-  scores?: Record<string, unknown>
-  note?: string
-  isFavorite: boolean
-  tags: string[]
   createdAt: string
   updatedAt: string
 }
@@ -34,7 +29,6 @@ export interface LibraryCard {
 export interface LibraryFilterOptions {
   platform?: Platform | "all"
   search?: string
-  onlyFavorites?: boolean
   page?: number
   pageSize?: number
 }

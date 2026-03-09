@@ -38,20 +38,6 @@ export function useLibraryCards() {
     return res.ok
   }
 
-  async function toggleFavorite(id: string, current: boolean) {
-    const res = await fetch(`/api/library/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isFavorite: !current }),
-    })
-    if (res.ok) {
-      setCards((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isFavorite: !current } : c)),
-      )
-    }
-    return res.ok
-  }
-
   async function updateAnalysis(id: string, analysis: AnalysisResult) {
     const res = await fetch(`/api/library/${id}`, {
       method: "PATCH",
@@ -66,5 +52,5 @@ export function useLibraryCards() {
     return res.ok
   }
 
-  return { cards, loading, error, refetch: fetchCards, deleteCard, toggleFavorite, updateAnalysis }
+  return { cards, loading, error, refetch: fetchCards, deleteCard, updateAnalysis }
 }

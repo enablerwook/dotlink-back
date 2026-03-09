@@ -208,6 +208,78 @@ _최종 업데이트: 2026-03-01 (Phase 8 완료, Phase 9 진행 중)_
 
 ---
 
+---
+
+## Phase 10: 시냅스 페이지 전면 재설계 🔲
+
+_최종 업데이트: 2026-03-06_
+
+### Step 1: DB 마이그레이션 — creation_cards 스키마 교체
+- [x] `supabase/migrations/20260306000001_creation_cards_v2.sql` 작성
+  - 기존 컬럼 제거: `hooking_point`, `content_structure`, `differentiation`, `keywords`, `ai_insights`, `draft`
+  - 신규 컬럼 추가: `title TEXT`, `steps JSONB DEFAULT '{}'`, `updated_at TIMESTAMPTZ DEFAULT now()`
+  - `source_card_a_id`, `source_card_b_id` ON DELETE SET NULL 유지
+  - RLS 정책: SELECT/INSERT/UPDATE/DELETE 모두 `user_id = auth.uid()`
+- [x] Supabase Dashboard에서 마이그레이션 실행
+
+### Step 2: 타입 업데이트 — `domains/synapse/types.ts`
+- [ ] `CreationSteps` 인터페이스 추가 (9개 필드: `draft_script`, `content_type`, `hook_text`, `hook_visual`, `engagement`, `caption`, `selling_point`, `production`, `final_script`)
+- [ ] `CreationCard` 타입 교체 (구 필드 → `title`, `steps: CreationSteps`, `sourceCardAId`, `sourceCardBId`)
+- [ ] `DroppedFrame`, `CreationSaveData` 유지 (로컬 임시저장용)
+
+### Step 3: API 업데이트 — `app/api/synapse/route.ts`
+- [ ] `GET /api/synapse` — `creation_cards` 전체 조회, `CreationCard[]` 반환
+- [ ] `POST /api/synapse` — `title` + `steps` + `sourceCardAId/B` 받아서 INSERT
+- [ ] 인증 확인 (user_id = auth.uid())
+- [ ] Fail Fast + Named Error 적용
+
+### Step 4: 시냅스 페이지 재설계 — `app/(dashboard)/synapse/page.tsx`
+- [ ] `selectedCardA` (AppContext) 의존성 제거
+- [ ] 로컬 상태 추가: `cardA: ContentCard | null`, `cardB: ContentCard | null`
+- [ ] `pickerOpen: "A" | "B" | null` 상태로 팝업 제어
+- [ ] Card A 슬롯: `cardA === null` → `EmptyCardSlot`, 아니면 `ComparisonCard`
+- [ ] Card B 슬롯: `cardB === null` → `EmptyCardSlot`, 아니면 `ComparisonCard`
+- [ ] `useLibraryCards()` 훅으로 라이브러리 카드 목록 로드 → `LibraryPickerDialog`에 전달
+- [ ] AI 비교 분석 버튼: `cardA && cardB` 둘 다 선택됐을 때만 활성화
+
+### Step 5: LibraryPickerDialog 연결 (Phase A에서 완료된 컴포넌트 활용)
+- [ ] 시냅스 페이지에서 `LibraryPickerDialog` import
+- [ ] `slotLabel="Card A"` / `slotLabel="Card B"` + `excludeCardId` 적용
+- [ ] 선택 콜백: `onSelect={(card) => setCardA(card)}` / `setCardB(card)`
+
+### Step 6: CardStack 컴포넌트 필드명 수정 — `components/synapse/card-stack.tsx`
+- [ ] `sections` 배열 하드코딩 제거
+- [ ] `ANALYSIS_CARD_SECTIONS` SSOT 사용 (`@/lib/analysis-tabs`)
+- [ ] `current.analysis[key]` 접근 유지 (ContentCard.analysis 구조 동일)
+
+### Step 7: Creation Card 전면 교체 — `components/synapse/creation-card.tsx`
+- [ ] 9개 필드 교체: 기존 (`script`, `hookVisual`, `storyboard` 등) → 확정 필드명 (`draft_script`, `hook_text`, `hook_visual`, `engagement`, `content_type`, `caption`, `selling_point`, `production`, `final_script`)
+- [ ] 상단 버튼 3개 구현:
+  - `저장하기` → 제목 입력 Dialog → `POST /api/synapse` 호출
+  - `불러오기` → `CreationPickerDialog` 열기
+  - `내보내기` → 텍스트 파일 다운로드 (기존 로직 유지)
+- [ ] 저장 성공 시 토스트 or 체크 표시
+- [ ] 0/9 진행률 Badge (채워진 단계 수 카운트)
+
+### Step 8: CreationPickerDialog 신규 생성 — `components/synapse/creation-picker-dialog.tsx`
+- [ ] `LibraryPickerDialog`와 동일한 UI 구조 (Dialog + 검색 + 그리드)
+- [ ] 데이터: `GET /api/synapse` 호출 → `CreationCard[]`
+- [ ] 카드 선택 시 `steps` 9개 필드를 Creation Card 폼에 로드
+- [ ] 단일 책임: "저장된 기획안 선택" 기능만
+
+### Step 9: 라이브러리 "크리에이션 카드" 탭 연결
+- [ ] `app/(dashboard)/library/page.tsx` — 탭 추가 또는 기존 탭 연결 확인
+- [ ] `GET /api/synapse` 데이터로 크리에이션 카드 목록 렌더링
+- [ ] 카드 클릭 시 `CreationDetailModal` 열기 (Phase A에서 완료된 컴포넌트 활용)
+
+### Step 10: 타입 검사 & 통합 테스트
+- [ ] `npx tsc --noEmit` 0 errors 확인
+- [ ] Card A/B 선택 → 카드 표시 동작 확인
+- [ ] Creation Card 저장 → 라이브러리 탭에 표시 확인
+- [ ] 불러오기 → 9단계 내용 복원 확인
+
+---
+
 ## 미결정 사항
 
 - [ ] 결제 게이트웨이 선택 (Phase 7, 보류)

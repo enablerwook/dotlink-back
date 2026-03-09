@@ -1,26 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, X, Zap } from "lucide-react"
+import { ChevronLeft, ChevronRight, X, Zap, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DifficultyMeter } from "@/components/analysis/difficulty-meter"
 import type { ContentCard } from "@/lib/types"
+import { ANALYSIS_CARD_SECTIONS } from "@/lib/analysis-tabs"
 
 const platformColors: Record<string, string> = {
   instagram: "bg-pink-500/20 text-pink-400",
   tiktok: "bg-cyan-500/20 text-cyan-400",
   youtube: "bg-red-500/20 text-red-400",
 }
-
-// 카드 뒷면에 표시할 분석 섹션 (string 필드만)
-const analysisSections: { key: string; label: string }[] = [
-  { key: "hook_analysis",   label: "3초 후킹 영상" },
-  { key: "content_type",    label: "콘텐츠 유형" },
-  { key: "production_note", label: "촬영/편집 스타일" },
-  { key: "selling_point",   label: "세일즈/소구점" },
-]
 
 export function ContentCardComponent({
   card,
@@ -146,7 +139,25 @@ export function ContentCardComponent({
             <div className="flex flex-col gap-2.5 p-3 pt-8">
               <h4 className="text-xs font-bold text-foreground">{card.title}</h4>
 
-              {analysisSections.map(({ key, label }) => {
+              {/* 인게이지먼트 지표 */}
+              {card.analysis.engagement?.metrics && (
+                <div className="grid grid-cols-3 gap-1.5 rounded-lg border bg-muted/30 p-2">
+                  {[
+                    { label: "조회수", value: card.analysis.engagement.metrics.views },
+                    { label: "좋아요", value: card.analysis.engagement.metrics.likes },
+                    { label: "댓글",   value: card.analysis.engagement.metrics.comments },
+                  ].map((m) => (
+                    <div key={m.label} className="flex flex-col items-center">
+                      <span className="text-xs font-semibold tabular-nums">
+                        {m.value.toLocaleString()}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{m.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {ANALYSIS_CARD_SECTIONS.map(({ key, label }) => {
                 const value = card.analysis[key as keyof typeof card.analysis]
                 const text = typeof value === "string" ? value : ""
                 if (!text) return null
@@ -158,10 +169,12 @@ export function ContentCardComponent({
                 )
               })}
 
-              <div>
-                <p className="mb-1 text-xs font-semibold text-primary">제작 난이도</p>
-                <DifficultyMeter difficulty={card.analysis.difficulty} />
-              </div>
+              {card.analysis.difficulty && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold text-primary">제작 난이도</p>
+                  <DifficultyMeter difficulty={card.analysis.difficulty} />
+                </div>
+              )}
 
               {/* 상세 보기 버튼 */}
               <button
@@ -186,7 +199,20 @@ export function ContentCardComponent({
         >
           {card.title}
         </h3>
-        <p className="text-xs text-muted-foreground">{card.dateAnalyzed}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">{card.postedAt ?? card.dateAnalyzed}</p>
+          <a
+            href={card.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-0.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+            aria-label="원본 링크"
+          >
+            <ExternalLink className="size-3" />
+            원본
+          </a>
+        </div>
       </div>
     </div>
   )

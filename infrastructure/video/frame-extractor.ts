@@ -59,14 +59,16 @@ function extractSingleFrame(
 
 /**
  * 영상 URL에서 0.5초 간격으로 16장(0초~7.5초)을 추출하고
- * Supabase Storage `frames/{analysisId}/frame-{n}.jpg`에 업로드합니다.
+ * Supabase Storage `frames/{userId}/{analysisId}/frame-{n}.jpg`에 업로드합니다.
  *
+ * - 경로에 userId 포함: 스토리지 RLS "첫 폴더 = 소유자" 규칙과 연동
  * - 개별 프레임 실패 시: 해당 프레임만 플레이스홀더로 fallback (파이프라인 중단 없음)
  * - 전체 실패 시: 16장 플레이스홀더 배열 반환
  */
 export async function extractAndUploadFrames(
   videoUrl: string,
   analysisId: string,
+  userId: string,
 ): Promise<FrameData[]> {
   const tmpDir = join(tmpdir(), `dotlink-frames-${analysisId}`)
 
@@ -85,7 +87,7 @@ export async function extractAndUploadFrames(
     for (let i = 0; i < FRAME_COUNT; i++) {
       const ts = timestamps[i]
       const localPath = join(tmpDir, `frame-${i}.jpg`)
-      const storagePath = `${analysisId}/frame-${i}.jpg`
+      const storagePath = `${userId}/${analysisId}/frame-${i}.jpg`
 
       try {
         // 1) ffmpeg로 해당 타임스탬프 프레임 추출
@@ -104,14 +106,17 @@ export async function extractAndUploadFrames(
 
         if (error) throw error
 
-        // 4) 공개 URL 획득
-        const { data: urlData } = supabase.storage
+        // 4) 서명된 URL 획득 (24시간 유효 — 공개 URL 대신 시간 제한 접근)
+        const { data: signedData, error: signError } = await supabase.storage
           .from("frames")
-          .getPublicUrl(storagePath)
+          .createSignedUrl(storagePath, 86400)
+
+        if (signError || !signedData) throw signError ?? new Error("서명 URL 생성 실패")
 
         frames.push({
           id: i + 1,
-          imageUrl: urlData.publicUrl,
+          imageUrl: signedData.signedUrl,
+          storagePath,                    // 갱신용 경로 보존
           timestamp: ts,
           gradient: FALLBACK_GRADIENTS[i],
           label: `${ts.toFixed(1)}s`,
@@ -133,7 +138,7 @@ export async function extractAndUploadFrames(
     return buildPlaceholderFrames()
   } finally {
     // 임시 디렉토리 정리
-    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {})
+    await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => { })
   }
 }
 
@@ -145,10 +150,11 @@ export async function extractAndUploadFrames(
 export async function uploadThumbnailFrame(
   thumbnailUrl: string,
   analysisId: string,
+  userId: string,
   existingFrame: FrameData,
 ): Promise<FrameData> {
   // frame-0.jpg는 ffmpeg가 먼저 INSERT할 수 있으므로 별도 경로 사용 (UPDATE RLS 방지)
-  const storagePath = `${analysisId}/thumbnail.jpg`
+  const storagePath = `${userId}/${analysisId}/thumbnail.jpg`
 
   try {
     // Instagram CDN은 브라우저처럼 보이는 헤더 없이 서버 fetch 시 403/400 차단
@@ -175,12 +181,14 @@ export async function uploadThumbnailFrame(
 
     if (error) throw error
 
-    const { data: urlData } = supabase.storage
+    const { data: signedData, error: signError } = await supabase.storage
       .from("frames")
-      .getPublicUrl(storagePath)
+      .createSignedUrl(storagePath, 86400)
 
-    console.log("[frame] thumbnail → Supabase Storage 업로드 완료:", urlData.publicUrl)
-    return { ...existingFrame, imageUrl: urlData.publicUrl }
+    if (signError || !signedData) throw signError ?? new Error("서명 URL 생성 실패")
+
+    console.log("[frame] thumbnail → Supabase Storage 업로드 완료")
+    return { ...existingFrame, imageUrl: signedData.signedUrl, storagePath }
   } catch (err) {
     // Supabase 업로드 실패 시 원본 CDN URL 직접 사용 (단기 fallback)
     console.warn("[frame] thumbnail 업로드 실패, CDN URL fallback:", err)

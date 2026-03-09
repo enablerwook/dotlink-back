@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider"
 import { FrameCarousel } from "./frame-carousel"
 import { DifficultyMeter } from "./difficulty-meter"
 import type { AnalysisResult, ContentCard, DifficultyRating } from "@/lib/types"
+import { ANALYSIS_TEXT_TABS, type AnalysisTextTabKey } from "@/lib/analysis-tabs"
 
 // Gemini가 기존에 반환한 마크다운 기호를 일반 텍스트로 정규화
 function stripMarkdown(text: string): string {
@@ -19,19 +20,6 @@ function stripMarkdown(text: string): string {
     .replace(/^\*{1,2}\s+/gm, "• ")    // *  항목 → • 항목
     .replace(/^#{1,6}\s+/gm, "")       // ## 제목 → 제목
 }
-
-// 텍스트 기반 7개 탭 정의
-const textTabs = [
-  { key: "hook_analysis",   label: "3초 후킹 영상",   short: "후킹 영상" },
-  { key: "hook_text",       label: "3초 후킹 텍스트",  short: "후킹 텍스트" },
-  { key: "full_script",     label: "전체 대본",        short: "대본" },
-  { key: "caption",         label: "캡션 & 해시태그",  short: "캡션" },
-  { key: "production_note", label: "촬영/편집 스타일", short: "연출" },
-  { key: "content_type",    label: "콘텐츠 유형",      short: "유형" },
-  { key: "selling_point",   label: "세일즈/소구점",    short: "소구점" },
-] as const
-
-type TextTabKey = typeof textTabs[number]["key"]
 
 const difficultyLabels: { key: keyof DifficultyRating; label: string }[] = [
   { key: "planning", label: "기획" },
@@ -48,7 +36,7 @@ export function AnalysisResults({
 }) {
   const { analysis } = card
 
-  const [editingKey, setEditingKey] = useState<TextTabKey | "engagement" | "difficulty" | null>(null)
+  const [editingKey, setEditingKey] = useState<AnalysisTextTabKey | "engagement" | "difficulty" | null>(null)
   const [editValue, setEditValue] = useState("")
   const [editDifficulty, setEditDifficulty] = useState<DifficultyRating>({
     planning: 1,
@@ -56,16 +44,16 @@ export function AnalysisResults({
     editing: 1,
   })
 
-  function startTextEdit(key: TextTabKey | "engagement") {
+  function startTextEdit(key: AnalysisTextTabKey | "engagement") {
     const current =
       key === "engagement"
         ? analysis.engagement.analysis
-        : analysis[key]
+        : (analysis[key as AnalysisTextTabKey] as string)
     setEditingKey(key)
     setEditValue(stripMarkdown(current ?? ""))
   }
 
-  function saveTextEdit(key: TextTabKey | "engagement") {
+  function saveTextEdit(key: AnalysisTextTabKey | "engagement") {
     if (onUpdate) {
       if (key === "engagement") {
         onUpdate({ ...analysis, engagement: { ...analysis.engagement, analysis: editValue } })
@@ -105,10 +93,10 @@ export function AnalysisResults({
       </Card>
 
       {/* Analysis tabs */}
-      <Tabs defaultValue="hook_analysis" className="w-full">
+      <Tabs defaultValue="content_type" className="w-full">
         <ScrollArea className="w-full">
           <TabsList className="w-full justify-start">
-            {textTabs.map((item) => (
+            {ANALYSIS_TEXT_TABS.map((item) => (
               <TabsTrigger key={item.key} value={item.key} className="shrink-0 text-xs">
                 {item.short}
               </TabsTrigger>
@@ -123,8 +111,8 @@ export function AnalysisResults({
         </ScrollArea>
 
         {/* 텍스트 기반 탭 */}
-        {textTabs.map((item) => {
-          const raw = analysis[item.key as TextTabKey] as string
+        {ANALYSIS_TEXT_TABS.map((item) => {
+          const raw = analysis[item.key as AnalysisTextTabKey] as string
           const value = raw ? stripMarkdown(raw) : ""
           const isEmpty = !value
           const isEditing = editingKey === item.key
@@ -177,11 +165,7 @@ export function AnalysisResults({
                     </div>
                   ) : isEmpty ? (
                     <p className="text-sm text-muted-foreground/50 italic">
-                      {item.key === "full_script"
-                        ? "음성이 없거나 추출에 실패하여 대본을 표시할 수 없습니다."
-                        : item.key === "hook_text"
-                        ? "첫 5초 내 발화 텍스트가 없거나 음성 추출에 실패했습니다."
-                        : "분석 데이터가 없습니다."}
+                      분석 데이터가 없습니다.
                     </p>
                   ) : (
                     <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">

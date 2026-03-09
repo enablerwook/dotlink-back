@@ -20,7 +20,6 @@ function toContentCard(res: AnalysisResponse): ContentCard {
     dateAnalyzed: res.createdAt,
     frames: res.frames,
     analysis: res.analysis,
-    tags: res.tags,
   }
 }
 

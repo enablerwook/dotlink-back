@@ -45,15 +45,6 @@ export function CardDetailModal({
               card={card}
               onUpdate={onUpdate ? (analysis) => onUpdate(card.id, analysis) : undefined}
             />
-            {card.tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {card.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
           </div>
         </ScrollArea>
       </DialogContent>
